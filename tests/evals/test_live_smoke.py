@@ -20,8 +20,11 @@ _CASES = select_smoke(load_cases([_s.path(f) for f in _s.eval.golden_files]), _s
 
 @pytest.fixture(scope="module")
 def pipeline():
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        pytest.skip("ANTHROPIC_API_KEY not set")
+    # API key locally, Workload Identity Federation in CI (see .github/workflows/eval.yml).
+    if not (
+        os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_FEDERATION_RULE_ID")
+    ):
+        pytest.skip("no Anthropic credentials: set ANTHROPIC_API_KEY or the federation env vars")
     if not _s.path(_s.corpus.index_path).exists():
         pytest.skip("index not built: run `aiact parse` and `aiact build-index`")
     from aiact_rag.pipeline import RagPipeline

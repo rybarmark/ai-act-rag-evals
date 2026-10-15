@@ -12,6 +12,12 @@ on:
         options: [smoke, full]
         default: full
 
+# Auth: Workload Identity Federation, no stored API key. GitHub issues a short-lived OIDC
+# token, the Anthropic SDK exchanges it. The federation rule only trusts runs on main.
+permissions:
+  id-token: write
+  contents: read
+
 concurrency:
   group: eval-${{ github.ref }}
   cancel-in-progress: true
@@ -21,7 +27,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # Do not set ANTHROPIC_API_KEY here: if set at all, even empty, it overrides federation.
+      ANTHROPIC_FEDERATION_RULE_ID: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
+      ANTHROPIC_ORGANIZATION_ID: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
+      ANTHROPIC_SERVICE_ACCOUNT_ID: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
+      ANTHROPIC_WORKSPACE_ID: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+      ANTHROPIC_IDENTITY_TOKEN_FILE: /tmp/gha-jwt
       MODE: ${{ github.event_name == 'pull_request' && 'smoke' || inputs.mode || 'full' }}
     steps:
       - uses: actions/checkout@v4
@@ -34,6 +45,23 @@ jobs:
           path: ~/.cache/huggingface
           key: hf-${{ hashFiles('config/settings.yaml') }}
       - run: pip install -e ".[embed,dev]"
+      # GitHub OIDC tokens expire after ~5 min and are single-use; a full eval runs longer.
+      # Fetch one now and refresh it in the background; the SDK re-reads the file on refresh.
+      - name: Fetch GitHub OIDC token (and keep it fresh)
+        run: |
+          cat > /tmp/fetch-oidc.sh <<'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          url="$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com"
+          curl -sSf -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$url" \
+            | jq -er .value > "$ANTHROPIC_IDENTITY_TOKEN_FILE.tmp"
+          mv "$ANTHROPIC_IDENTITY_TOKEN_FILE.tmp" "$ANTHROPIC_IDENTITY_TOKEN_FILE"
+          EOF
+          chmod +x /tmp/fetch-oidc.sh
+          /tmp/fetch-oidc.sh
+          nohup bash -c 'while sleep 180; do /tmp/fetch-oidc.sh; done' >/dev/null 2>&1 &
+      - name: Check Anthropic auth
+        run: python -c "import anthropic; anthropic.Anthropic().models.list(limit=1); print('auth ok')"
       # chunks.jsonl is committed, so CI never depends on EUR-Lex being reachable.
       - run: aiact build-index
       - run: python -m aiact_evals.run --mode "$MODE"

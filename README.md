@@ -60,6 +60,8 @@ tests/evals/                live per-case checks: pytest -m eval
 .github/workflows/          ci.yml (every push), eval.yml (PR smoke, nightly full)
 ```
 
+CI holds no API key. `eval.yml` authenticates with [Workload Identity Federation](https://platform.claude.com/docs/en/manage-claude/wif-providers/github-actions): GitHub issues a short-lived OIDC token, the Anthropic SDK exchanges it, and the federation rule only trusts runs on `main`. The rule, organisation, service account and workspace IDs are repo variables, not secrets. Locally, use an API key in `.env`.
+
 ## Results
 
 _Baseline table goes here after the first full run._
