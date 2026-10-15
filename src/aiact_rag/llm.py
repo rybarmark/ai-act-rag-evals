@@ -11,24 +11,31 @@ from aiact_rag.config import ModelSettings
 class LLMClient(Protocol):
     model: str
 
-    def complete(self, system: str, user: str, *, max_tokens: int, temperature: float) -> str: ...
+    def complete(self, system: str, user: str, *, max_tokens: int) -> str: ...
 
 
 class AnthropicClient:
-    def __init__(self, model: str):
+    def __init__(self, model: str, effort: str | None = None):
         import anthropic
 
         self.model = model
-        self._client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+        self.effort = effort
+        # Credentials from the environment: ANTHROPIC_API_KEY locally, Workload Identity
+        # Federation env vars in CI.
+        self._client = anthropic.Anthropic()
 
-    def complete(self, system: str, user: str, *, max_tokens: int, temperature: float) -> str:
+    def complete(self, system: str, user: str, *, max_tokens: int) -> str:
+        # No temperature: current models only accept the default. Thinking is adaptive by
+        # default, its tokens count toward max_tokens, and `effort` sets how much it thinks.
+        extra = {"output_config": {"effort": self.effort}} if self.effort else {}
         resp = self._client.messages.create(
             model=self.model,
             max_tokens=max_tokens,
-            temperature=temperature,
             system=system,
             messages=[{"role": "user", "content": user}],
+            **extra,
         )
+        # Content may start with thinking blocks; keep only the text.
         return "".join(block.text for block in resp.content if block.type == "text")
 
 
@@ -40,12 +47,12 @@ class FakeLLM:
         self.model = model
         self.calls: list[tuple[str, str]] = []
 
-    def complete(self, system: str, user: str, *, max_tokens: int, temperature: float) -> str:
+    def complete(self, system: str, user: str, *, max_tokens: int) -> str:
         self.calls.append((system, user))
         return self.responder if isinstance(self.responder, str) else self.responder(system, user)
 
 
 def make_client(settings: ModelSettings) -> LLMClient:
     if settings.provider == "anthropic":
-        return AnthropicClient(settings.model)
+        return AnthropicClient(settings.model, settings.effort)
     raise ValueError(f"Unknown provider: {settings.provider}")

@@ -6,9 +6,11 @@ corpus:
   # including the 2026 AI Omnibus amendments). It is written into every result file.
   version: "2024-1689-original"
   languages: [en, cs]
+  # EU Publications Office (CELLAR): one URL per CELEX number, language picked by
+  # Accept-Language. The eur-lex.europa.eu HTML pages block scripts with a bot check.
   sources:
-    en: https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R1689
-    cs: https://eur-lex.europa.eu/legal-content/CS/TXT/HTML/?uri=CELEX:32024R1689
+    en: https://publications.europa.eu/resource/celex/32024R1689
+    cs: https://publications.europa.eu/resource/celex/32024R1689
   raw_dir: data/raw
   chunks_path: data/processed/chunks.jsonl   # commit this file; CI builds the index from it
   index_path: data/processed/index.npz
@@ -18,17 +20,20 @@ retrieval:
   top_k: 5
   max_chunk_chars: 4000
 
+# No temperature: current Claude models reject non-default sampling values (HTTP 400),
+# so run-to-run variation is measured with eval.repeats instead of suppressed.
+# max_tokens includes adaptive-thinking tokens; effort sets how much the model thinks.
 generation:            # the system under test
   provider: anthropic
   model: claude-haiku-5-5
-  max_tokens: 800
-  temperature: 0.0
+  max_tokens: 2000
+  effort: low
 
 judge:                 # grades the answers; should be at least as strong as the generator
   provider: anthropic
   model: claude-sonnet-5-5
-  max_tokens: 400
-  temperature: 0.0
+  max_tokens: 4000
+  effort: medium
 
 eval:
   repeats: 3

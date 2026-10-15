@@ -34,7 +34,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[embed,dev]"
 cp .env.example .env            # add ANTHROPIC_API_KEY
 
-aiact fetch                     # or save the EUR-Lex pages manually to data/raw/en.html, cs.html
+aiact fetch                     # EN + CS XHTML from the EU Publications Office (CELLAR)
 aiact parse                     # -> data/processed/chunks.jsonl (commit it)
 aiact build-index
 aiact ask "What is the maximum fine for prohibited AI practices?"

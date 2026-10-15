@@ -14,6 +14,26 @@ def test_parse_articles_and_annexes():
     assert "recital" not in " ".join(s.text for s in sections).lower()
 
 
+def test_point_label_in_own_cell_is_joined_to_its_text():
+    sections = parse_eurlex_html((FIXTURES / "eurlex_sample.html").read_text(encoding="utf-8"))
+    lines = sections[0].text.split("\n")
+    assert "(d) risk assessments of natural persons based solely on profiling;" in lines
+    assert "(d)" not in lines
+
+
+def test_table_cell_without_paragraph_is_kept():
+    sections = parse_eurlex_html((FIXTURES / "eurlex_sample.html").read_text(encoding="utf-8"))
+    lines = sections[2].text.split("\n")
+    assert "2. Critical infrastructure, as a cell with no paragraph tag." in lines
+    # cell with its own text and a nested table: text kept once, nested points in order
+    assert lines[-2:] == ["3.1. An intro next to a nested list:", "(a) a nested point."]
+
+
+def test_space_before_punctuation_is_removed():
+    html = '<div id="art_1"><p class="oj-normal">the <span>Union</span> .</p></div>'
+    assert parse_eurlex_html(html)[0].text == "the Union."
+
+
 def test_chunk_header_and_ids():
     chunks = chunk_sections([Section("99", "Penalties", "body")], "cs")
     assert chunks[0].id == "cs-99-p0"

@@ -90,7 +90,7 @@ The report shows the score per grader against its threshold and the baseline, a 
 About 2–3 weeks part-time. Each phase ends with something pushed to GitHub.
 
 - [x] **Phase 0, setup:** create the public repo from the skeleton, CI green on unit tests
-- [ ] **Phase 1, the system under test:** fetch and parse EN + CS text, chunk by Article, build the index, `answer()` returns text + citations + retrieved chunks
+- [x] **Phase 1, the system under test:** fetch and parse EN + CS text, chunk by Article, build the index, `answer()` returns text + citations + retrieved chunks
 - [ ] **Phase 2, golden set v1:** 60 cases across all categories, reference answers checked against the Act
 - [ ] **Phase 3, graders:** deterministic graders with unit tests, then the two judges with prompts versioned in the repo
 - [ ] **Phase 4, calibration:** hand-label 30 cases, measure judge agreement, fix judge prompts

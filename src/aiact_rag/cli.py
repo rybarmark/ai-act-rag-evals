@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from collections import Counter
 
 from dotenv import load_dotenv
 
@@ -15,23 +14,27 @@ def _fetch(s, _args) -> None:
 
     for lang in s.corpus.languages:
         dest = s.path(s.corpus.raw_dir) / f"{lang}.html"
-        print(f"{lang}: {fetch(s.corpus.sources[lang], dest)}")
+        print(f"{lang}: {fetch(s.corpus.sources[lang], lang, dest)}")
 
 
 def _parse(s, _args) -> None:
     from aiact_rag.ingest.chunk import chunk_sections, save_chunks
     from aiact_rag.ingest.parse import parse_eurlex_html
 
-    chunks = []
+    chunks, refs = [], {}
     for lang in s.corpus.languages:
         html = (s.path(s.corpus.raw_dir) / f"{lang}.html").read_text(encoding="utf-8")
         sections = parse_eurlex_html(html)
         articles = sum(1 for x in sections if not x.article.startswith("Annex"))
         print(f"{lang}: {articles} Articles, {len(sections) - articles} Annexes")
+        refs[lang] = {x.article for x in sections}
         chunks += chunk_sections(sections, lang, s.retrieval.max_chunk_chars)
-    counts = Counter(c.lang for c in chunks)
-    if len(set(counts.values())) > 1:
-        print(f"WARNING: languages have different chunk counts: {dict(counts)}")
+    # Chunk counts may differ (Czech text is shorter, so long Articles split differently);
+    # the set of Articles and Annexes must not, or cross-lingual cases become unanswerable.
+    first, *rest = s.corpus.languages
+    for lang in rest:
+        if diff := refs[first] ^ refs[lang]:
+            print(f"WARNING: {first} and {lang} differ in Articles/Annexes: {sorted(diff)}")
     save_chunks(chunks, s.path(s.corpus.chunks_path))
     print(f"saved {len(chunks)} chunks -> {s.corpus.chunks_path}")
 

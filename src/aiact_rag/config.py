@@ -29,8 +29,10 @@ class RetrievalSettings(BaseModel):
 class ModelSettings(BaseModel):
     provider: str = "anthropic"
     model: str
-    max_tokens: int = 800
-    temperature: float = 0.0
+    max_tokens: int = 2000  # includes thinking tokens on current models
+    # low | medium | high | xhigh | max; None = the model's default. Current Claude models
+    # reject non-default temperature/top_p, so effort is the knob for cost and depth.
+    effort: str | None = None
 
 
 class EvalSettings(BaseModel):

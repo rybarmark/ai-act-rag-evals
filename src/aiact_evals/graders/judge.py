@@ -44,13 +44,12 @@ def parse_verdict(raw: str) -> tuple[bool | None, str]:
 
 
 class LLMJudge:
-    def __init__(self, llm: LLMClient, *, max_tokens: int = 400, temperature: float = 0.0):
+    def __init__(self, llm: LLMClient, *, max_tokens: int = 4000):
         self.llm = llm
         self.max_tokens = max_tokens
-        self.temperature = temperature
 
     def _ask(self, system: str, user: str) -> tuple[bool | None, str]:
-        raw = self.llm.complete(system, user, max_tokens=self.max_tokens, temperature=self.temperature)
+        raw = self.llm.complete(system, user, max_tokens=self.max_tokens)
         return parse_verdict(raw)
 
     def faithfulness(self, case: GoldenCase, answer: Answer) -> GradeResult:

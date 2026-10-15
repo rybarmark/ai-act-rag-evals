@@ -19,8 +19,7 @@ class RagPipeline:
         llm: LLMClient,
         *,
         top_k: int = 5,
-        max_tokens: int = 800,
-        temperature: float = 0.0,
+        max_tokens: int = 2000,
         corpus_version: str = "unknown",
     ):
         self.index = index
@@ -28,7 +27,6 @@ class RagPipeline:
         self.llm = llm
         self.top_k = top_k
         self.max_tokens = max_tokens
-        self.temperature = temperature
         self.corpus_version = corpus_version
 
     @classmethod
@@ -41,7 +39,6 @@ class RagPipeline:
             make_client(s.generation),
             top_k=s.retrieval.top_k,
             max_tokens=s.generation.max_tokens,
-            temperature=s.generation.temperature,
             corpus_version=s.corpus.version,
         )
 
@@ -51,7 +48,6 @@ class RagPipeline:
             ANSWER_SYSTEM,
             build_answer_prompt(question, retrieved),
             max_tokens=self.max_tokens,
-            temperature=self.temperature,
         ).strip()
         refused = raw.startswith(REFUSAL_MARKER)
         return Answer(

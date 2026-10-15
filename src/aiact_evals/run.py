@@ -48,9 +48,7 @@ def main() -> None:
     repeats = args.repeats or (1 if args.mode == "smoke" else s.eval.repeats)
 
     pipeline = RagPipeline.from_settings(s)
-    judge = None if args.no_judge else LLMJudge(
-        make_client(s.judge), max_tokens=s.judge.max_tokens, temperature=s.judge.temperature
-    )
+    judge = None if args.no_judge else LLMJudge(make_client(s.judge), max_tokens=s.judge.max_tokens)
     print(f"{len(cases)} cases x {repeats} runs  (. pass  F fail  - n/a)")
     runs = run_cases(cases, pipeline, judge, repeats)
     summary = summarize(cases, runs, pair_consistency(cases, runs))
