@@ -94,7 +94,7 @@ About 2–3 weeks part-time. Each phase ends with something pushed to GitHub.
 - [ ] **Phase 2, golden set v1:** 60 cases across all categories, reference answers checked against the Act
 - [ ] **Phase 3, graders:** deterministic graders with unit tests, then the two judges with prompts versioned in the repo
 - [ ] **Phase 4, calibration:** hand-label 30 cases, measure judge agreement, fix judge prompts
-- [ ] **Phase 5, gate and report:** runner with 3 repeats, baseline file, HTML report, `eval.yml` live
+- [ ] **Phase 5, gate and report:** runner with 3 repeats, baseline file, HTML report, `eval.yml` live (re-enable the nightly `schedule` in `eval.yml`, off since Phase 1)
 - [ ] **Phase 6, the story:** grow the set to 150; make one deliberate regression (a worse prompt or a smaller model), show the gate catching it, and write it up in the README
 
 Phase 6 is the portfolio's headline: "here is a change that looked fine, and here is the suite catching it."
