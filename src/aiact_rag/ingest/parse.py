@@ -63,8 +63,19 @@ def _body_text(tag) -> str:
     return "" if _is_heading(tag) else tag.get_text(" ")
 
 
+def _mark_exponents(soup) -> None:
+    """10<span class="oj-super">25</span> -> "10^25". Without this, Article 51(2)'s compute
+    threshold reads "10 25". Superscripts not following a digit are footnote markers."""
+    for sup in soup.select("span.oj-super"):
+        prev = sup.previous_sibling
+        if isinstance(prev, str) and prev[-1:].isdigit():
+            sup.replace_with(f"^{sup.get_text()}")
+    soup.smooth()  # merge "…10" + "^25" into one string so get_text(" ") adds no space
+
+
 def parse_eurlex_html(html: str) -> list[Section]:
     soup = BeautifulSoup(html, "html.parser")
+    _mark_exponents(soup)
     sections: list[Section] = []
     for div in soup.find_all("div", id=True):
         art, anx = _ARTICLE_ID.match(div["id"]), _ANNEX_ID.match(div["id"])

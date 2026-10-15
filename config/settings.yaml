@@ -4,7 +4,8 @@
 corpus:
   # Bump this whenever you index a different text (e.g. the consolidated version
   # including the 2026 AI Omnibus amendments). It is written into every result file.
-  version: "2024-1689-original"
+  # -pN = parser revision: bump it too when a parser fix changes the indexed text.
+  version: "2024-1689-original-p2"
   languages: [en, cs]
   # EU Publications Office (CELLAR): one URL per CELEX number, language picked by
   # Accept-Language. The eur-lex.europa.eu HTML pages block scripts with a bot check.
@@ -41,6 +42,7 @@ eval:
   golden_files:
     - data/golden/golden_v0.jsonl
     - data/golden/adversarial_v0.jsonl
+    - data/golden/golden_v1.jsonl
   results_dir: results
   baseline_path: results/baseline.json
   max_drop_pp: 3.0     # fail if a grader drops more than this many points below baseline

@@ -29,6 +29,14 @@ def test_table_cell_without_paragraph_is_kept():
     assert lines[-2:] == ["3.1. An intro next to a nested list:", "(a) a nested point."]
 
 
+def test_exponent_is_marked_and_footnote_marker_is_not():
+    html = (
+        '<div id="art_51"><p class="oj-normal">greater than 10<span class="oj-super">25</span>.'
+        '</p><p class="oj-normal">Regulation (<span class="oj-super">*</span>)</p></div>'
+    )
+    assert parse_eurlex_html(html)[0].text == "greater than 10^25.\nRegulation ( * )"
+
+
 def test_space_before_punctuation_is_removed():
     html = '<div id="art_1"><p class="oj-normal">the <span>Union</span> .</p></div>'
     assert parse_eurlex_html(html)[0].text == "the Union."
