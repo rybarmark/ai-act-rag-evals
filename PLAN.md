@@ -106,6 +106,7 @@ Phase 6 is the portfolio's headline: "here is a change that looked fine, and her
 - **Judge bias.** An LLM judge can favour fluent but wrong answers. Calibration against the 30 hand-labelled cases is the control.
 - **API cost.** Smoke runs use 20 cases and one repeat; the full run is nightly. Put a spending cap on the API key.
   - Spend so far (to end of Phase 1, 15 Oct 2026): **$0.11** for all live tests, covering three `aiact ask` calls, one local smoke eval and one full plus two partial CI smoke evals (9 cases, 1 run; Haiku 5.5 generator + Sonnet 5.5 judge).
+  - Spend so far (Phase 2 draft, 15 Oct 2026): **$0.33** in total, as shown in the Console. The latest run (a 25-case smoke eval on golden set v1) may not be fully included yet because billing lags.
 - **Czech text quality.** Parsing the CS HTML may break on different headings. Unit-test the parser on both languages.
 - **Legal-advice framing.** The README states the assistant is a test subject, not legal advice.
 
