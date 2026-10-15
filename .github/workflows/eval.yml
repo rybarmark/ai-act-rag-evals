@@ -3,8 +3,9 @@ name: eval
 on:
   pull_request:
     paths: ["src/**", "config/**", "data/golden/**", "data/processed/chunks.jsonl"]
-  schedule:
-    - cron: "0 2 * * *"
+  # Nightly full run: off until Phase 5 (gate + baseline), to keep spend at zero meanwhile.
+  # schedule:
+  #   - cron: "0 2 * * *"
   workflow_dispatch:
     inputs:
       mode:
