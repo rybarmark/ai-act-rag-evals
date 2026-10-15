@@ -1,0 +1,48 @@
+# Every value the system under test depends on lives here, so a change to any of
+# them (model, top_k, corpus version) is a reviewable diff that the eval gate checks.
+
+corpus:
+  # Bump this whenever you index a different text (e.g. the consolidated version
+  # including the 2026 AI Omnibus amendments). It is written into every result file.
+  version: "2024-1689-original"
+  languages: [en, cs]
+  sources:
+    en: https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R1689
+    cs: https://eur-lex.europa.eu/legal-content/CS/TXT/HTML/?uri=CELEX:32024R1689
+  raw_dir: data/raw
+  chunks_path: data/processed/chunks.jsonl   # commit this file; CI builds the index from it
+  index_path: data/processed/index.npz
+
+retrieval:
+  embedding_model: intfloat/multilingual-e5-small
+  top_k: 5
+  max_chunk_chars: 4000
+
+generation:            # the system under test
+  provider: anthropic
+  model: claude-haiku-5-5
+  max_tokens: 800
+  temperature: 0.0
+
+judge:                 # grades the answers; should be at least as strong as the generator
+  provider: anthropic
+  model: claude-sonnet-5-5
+  max_tokens: 400
+  temperature: 0.0
+
+eval:
+  repeats: 3
+  smoke_size: 20
+  golden_files:
+    - data/golden/golden_v0.jsonl
+    - data/golden/adversarial_v0.jsonl
+  results_dir: results
+  baseline_path: results/baseline.json
+  max_drop_pp: 3.0     # fail if a grader drops more than this many points below baseline
+  thresholds:          # starting values; tune after the first baseline
+    retrieval_hit: 0.90
+    citation_validity: 1.00
+    refusal: 0.95
+    faithfulness: 0.90
+    correctness: 0.85
+    consistency: 0.85
