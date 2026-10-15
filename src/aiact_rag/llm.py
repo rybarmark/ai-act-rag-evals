@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import cache
 from typing import Protocol
 
 from aiact_rag.config import ModelSettings
@@ -14,15 +15,24 @@ class LLMClient(Protocol):
     def complete(self, system: str, user: str, *, max_tokens: int) -> str: ...
 
 
+@cache
+def _anthropic_sdk_client():
+    """One SDK client per process, shared by the generator and the judge.
+
+    Credentials come from the environment: ANTHROPIC_API_KEY locally, Workload Identity
+    Federation in CI. Under federation each SDK client exchanges the GitHub identity token
+    itself, and GitHub tokens are single-use, so a second client would be refused.
+    """
+    import anthropic
+
+    return anthropic.Anthropic()
+
+
 class AnthropicClient:
     def __init__(self, model: str, effort: str | None = None):
-        import anthropic
-
         self.model = model
         self.effort = effort
-        # Credentials from the environment: ANTHROPIC_API_KEY locally, Workload Identity
-        # Federation env vars in CI.
-        self._client = anthropic.Anthropic()
+        self._client = _anthropic_sdk_client()
 
     def complete(self, system: str, user: str, *, max_tokens: int) -> str:
         # No temperature: current models only accept the default. Thinking is adaptive by
