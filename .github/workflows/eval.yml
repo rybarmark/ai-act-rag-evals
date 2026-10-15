@@ -64,7 +64,9 @@ jobs:
         run: python -c "import anthropic; anthropic.Anthropic().models.list(limit=1); print('auth ok')"
       # chunks.jsonl is committed, so CI never depends on EUR-Lex being reachable.
       - run: aiact build-index
-      - run: python -m aiact_evals.run --mode "$MODE"
+      # GitHub tokens are single-use (jti) and each new process exchanges its own, so fetch
+      # a fresh one: the auth check above already used the previous token.
+      - run: /tmp/fetch-oidc.sh && python -m aiact_evals.run --mode "$MODE"
       - run: python -m aiact_evals.gate results/latest.json
       - if: always()
         uses: actions/upload-artifact@v4
